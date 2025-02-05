@@ -1,35 +1,41 @@
-name: Build macOS App
+name: Build macOS .app
 
 on:
   push:
     branches:
-      - main  # Run when pushing to the main branch
+      - main  # Run when pushing to main branch
   pull_request:
+    branches:
+      - main  # Run on pull requests to main branch
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
-  build:
-    runs-on: macos-latest
+  build-macos-app:
+    runs-on: macos-latest  # Use macOS environment
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Get the latest code
 
-      - name: Set up Python
+      - name: Set Up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Adjust to your project’s Python version
+          python-version: "3.12"  # Adjust as needed
 
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pyqt5 pyinstaller
+          pip install --upgrade pip
+          pip install py2app PyQt5 flask pyserial
+          # Verify installation
+          python -m PyQt5.QtWidgets || true
 
-      - name: Build macOS App
+      - name: Build macOS App (.app)
         run: |
-          pyinstaller --onefile --windowed --name "ArduinoReader" --icon=app.icns arduino_reader_final.py
+          python setup.py py2app
+          ls -la dist  # Verify built files
 
-      - name: Upload Build Artifact
+      - name: Upload macOS .app Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-App
+          name: ArduinoReader-macOS
           path: dist/ArduinoReader.app
